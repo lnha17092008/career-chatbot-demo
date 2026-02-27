@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SOP Mentor AI - Trình hỗ trợ viết luận đại học</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* CSS VARIABLES - Pastel Palette */
+        :root {
+            --primary-blue: #e3f2fd;
+            --accent-blue: #1976d2;
+            --primary-orange: #fff3e0;
+            --accent-orange: #fb8c00;
+            --bg-color: #f8f9fa;
+            --text-dark: #2c3e50;
+            --text-light: #ffffff;
+            --border-radius: 12px;
+            --shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Be Vietnam Pro', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-dark);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* --- HEADER --- */
+        header {
+            background: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #eee;
+            box-shadow: var(--shadow);
+            z-index: 10;
+        }
+
+        .logo-group h1 {
+            font-size: 1.5rem;
+            color: var(--accent-blue);
+            font-weight: 700;
+        }
+
+        .logo-group p {
+            font-size: 0.85rem;
+            color: #7f8c8d;
+        }
+
+        .btn-reset {
+            background: var(--primary-orange);
+            color: var(--accent-orange);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: 0.3s;
+        }
+
+        .btn-reset:hover {
+            background: var(--accent-orange);
+            color: white;
+        }
+
+        /* --- MAIN LAYOUT --- */
+        main {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* --- SIDEBAR --- */
+        .sidebar {
+            width: 320px;
+            background: white;
+            border-left: 1px solid #eee;
+            padding: 1.5rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .card {
+            background: var(--bg-color);
+            padding: 1.2rem;
+            border-radius: var(--border-radius);
+            border: 1px solid #eee;
+        }
+
+        .card h3 {
+            font-size: 0.95rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Progress Tracker */
+        .progress-item {
+            margin-bottom: 10px;
+            font-size: 0.85rem;
+        }
+
+        .progress-bar {
+            height: 6px;
+            background: #ddd;
+            border-radius: 3px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--accent-blue);
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        /* Scoring */
+        .score-circle {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: var(--accent-orange);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0 auto 1rem;
+        }
+
+        .rubric-item {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            margin-bottom: 5px;
+        }
+
+        /* --- CHAT AREA --- */
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--primary-blue);
+            background-image: radial-gradient(#d1e9ff 1px, transparent 1px);
+            background-size: 20px 20px;
+            position: relative;
+        }
+
+        #chat-window {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .msg {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            line-height: 1.5;
+            font-size: 0.95rem;
+            position: relative;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .msg.ai {
+            align-self: flex-start;
+            background: white;
+            color: var(--text-dark);
+            border-bottom-left-radius: 2px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .msg.user {
+            align-self: flex-end;
+            background: var(--accent-blue);
+            color: white;
+            border-bottom-right-radius: 2px;
+        }
+
+        .typing {
+            font-style: italic;
+            font-size: 0.8rem;
+            color: #7f8c8d;
+            margin-bottom: 10px;
+            display: none;
+        }
+
+        /* --- INPUT AREA --- */
+        .input-area {
+            background: white;
+            padding: 1.5rem 2rem;
+            border-top: 1px solid #eee;
+        }
+
+        .input-wrapper {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        textarea {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            resize: none;
+            height: 50px;
+            max-height: 150px;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        textarea:focus {
+            border-color: var(--accent-blue);
+        }
+
+        .actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-send {
+            background: var(--accent-blue);
+            color: white;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.3s;
+        }
+
+        .btn-send:hover {
+            transform: scale(1.05);
+            background: #1565c0;
+        }
+
+        .btn-upload {
+            background: #f1f2f6;
+            color: #57606f;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            main { flex-direction: column; }
+            .sidebar { width: 100%; height: 200px; border-left: none; border-top: 1px solid #eee; }
+            .msg { max-width: 95%; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo-group">
+            <h1>SOP Mentor AI 🎓</h1>
+            <p>Người bạn đồng hành chinh phục giấc mơ du học</p>
+        </div>
+        <button class="btn-reset" onclick="resetSession()">Làm mới phiên chat</button>
+    </header>
+
+    <main>
+        <section class="chat-container">
+            <div id="chat-window">
+                </div>
+            <div id="typing-indicator" class="typing" style="margin-left: 2rem;">Mentor đang soạn câu trả lời...</div>
+            
+            <div class="input-area">
+                <div class="input-wrapper">
+                    <button class="btn-upload" title="Tải lên bản nháp" onclick="triggerUpload()">📎</button>
+                    <input type="file" id="file-input" hidden accept=".txt,.doc,.docx">
+                    <textarea id="user-input" placeholder="Nhập câu trả lời hoặc dán bài luận của bạn tại đây..."></textarea>
+                    <button class="btn-send" onclick="handleSendMessage()">🚀</button>
+                </div>
+            </div>
+        </section>
+
+        <aside class="sidebar">
+            <div class="card">
+                <h3>📈 Tiến độ hoàn thành</h3>
+                <div class="progress-item">
+                    <span>Thông tin cá nhân</span>
+                    <div class="progress-bar"><div id="p1" class="progress-fill"></div></div>
+                </div>
+                <div class="progress-item">
+                    <span>Xác định mục tiêu</span>
+                    <div class="progress-bar"><div id="p2" class="progress-fill"></div></div>
+                </div>
+                <div class="progress-item">
+                    <span>Cấu trúc SOP</span>
+                    <div class="progress-bar"><div id="p3" class="progress-fill"></div></div>
+                </div>
+            </div>
+
+            <div class="card" id="scoring-panel">
+                <h3>📊 Đánh giá bài luận</h3>
+                <div class="score-circle" id="total-score">--</div>
+                <div class="rubric-list">
+                    <div class="rubric-item"><span>Độ rõ ràng (Clarity)</span><b id="s-clarity">0/10</b></div>
+                    <div class="rubric-item"><span>Động lực (Motivation)</span><b id="s-motivation">0/10</b></div>
+                    <div class="rubric-item"><span>Cấu trúc (Structure)</span><b id="s-structure">0/10</b></div>
+                    <div class="rubric-item"><span>Cá nhân hóa (Story)</span><b id="s-story">0/10</b></div>
+                </div>
+                <div id="ai-suggestion" style="font-size: 0.8rem; margin-top: 10px; color: #666; border-top: 1px solid #ddd; padding-top: 10px;">
+                    Dán bài luận để nhận gợi ý cải thiện.
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>✅ SOP Checklist</h3>
+                <div style="font-size: 0.85rem; display: flex; flex-direction: column; gap: 5px;">
+                    <label><input type="checkbox" id="check-intro"> Mở bài ấn tượng</label>
+                    <label><input type="checkbox" id="check-goals"> Mục tiêu nghề nghiệp rõ ràng</label>
+                    <label><input type="checkbox" id="check-fit"> Tại sao chọn trường này?</label>
+                    <label><input type="checkbox" id="check-proof"> Minh chứng thành tích</label>
+                </div>
+            </div>
+        </aside>
+    </main>
+
+    <script>
+        // TRẠNG THÁI NGƯỜI DÙNG
+        let state = {
+            step: 0,
+            userData: {
+                major: '',
+                country: '',
+                school: '',
+                experience: '',
+                motivation: '',
+                stage: ''
+            },
+            history: []
+        };
+
+        const chatWindow = document.getElementById('chat-window');
+        const userInput = document.getElementById('user-input');
+        const typingIndicator = document.getElementById('typing-indicator');
+
+        // BỘ CÂU HỎI MENTOR
+        const questions = [
+            "Chào bạn! Mình là Mentor AI. Rất vui được đồng hành cùng bạn viết SOP. Đầu tiên, bạn dự định ứng tuyển vào **Ngành học** nào và tại **Quốc gia** nào?",
+            "Tuyệt vời! Bạn đã có **Trường mục tiêu** cụ thể nào chưa? Và điều gì khiến bạn chọn ngành này thay vì những ngành khác?",
+            "Hãy chia sẻ một vài **Thành tích nổi bật** hoặc hoạt động ngoại khóa mà bạn tâm đắc nhất nhé!",
+            "Cảm ơn bạn. Hiện tại bạn đang ở giai đoạn nào: \n1. Chưa biết bắt đầu từ đâu \n2. Đã có dàn ý \n3. Đã có bản nháp cần sửa",
+            "Rất rõ ràng. Bây giờ, hãy gửi bản nháp hoặc đặt câu hỏi cho mình. Nếu chưa có bản nháp, hãy gõ 'Hướng dẫn' để mình giúp bạn xây dựng cấu trúc nhé!"
+        ];
+
+        // KHỞI TẠO
+        window.onload = () => {
+            const savedState = localStorage.getItem('sop_mentor_state');
+            if (savedState) {
+                state = JSON.parse(savedState);
+                renderHistory();
+            } else {
+                addMessage('ai', questions[0]);
+            }
+            updateUI();
+        };
+
+        function addMessage(sender, text) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `msg ${sender}`;
+            msgDiv.innerHTML = text.replace(/\n/g, '<br>');
+            chatWindow.appendChild(msgDiv);
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+            
+            state.history.push({ sender, text });
+            saveState();
+        }
+
+        function handleSendMessage() {
+            const text = userInput.value.trim();
+            if (!text) return;
+
+            addMessage('user', text);
+            userInput.value = '';
+            
+            // Hiện hiệu ứng gõ
+            typingIndicator.style.display = 'block';
+            
+            setTimeout(() => {
+                typingIndicator.style.display = 'none';
+                processAI(text);
+            }, 1000);
+        }
+
+        // SOP SCORING LOGIC (MOCK)
+        function analyzeSOP(text) {
+            // Logic đơn giản để demo: tính điểm dựa trên độ dài và từ khóa
+            const length = text.length;
+            const keywords = ['nghiên cứu', 'mục tiêu', 'kỹ năng', 'đóng góp', 'kinh nghiệm', 'tại sao', 'đại học', 'research', 'passion', 'goal'];
+            let foundKeywords = keywords.filter(word => text.toLowerCase().includes(word)).length;
+
+            const scores = {
+                clarity: Math.min(10, Math.floor(length / 200) + 2),
+                motivation: Math.min(10, foundKeywords + 1),
+                structure: text.split('\n').filter(p => p.length > 50).length >= 4 ? 9 : 5,
+                story: text.includes("tôi") || text.includes("mình") || text.includes("I ") ? 8 : 4
+            };
+
+            const total = (scores.clarity + scores.motivation + scores.structure + scores.story) * 2.5;
+            
+            // Cập nhật giao diện
+            document.getElementById('total-score').innerText = Math.round(total);
+            document.getElementById('s-clarity').innerText = `${scores.clarity}/10`;
+            document.getElementById('s-motivation').innerText = `${scores.motivation}/10`;
+            document.getElementById('s-structure').innerText = `${scores.structure}/10`;
+            document.getElementById('s-story').innerText = `${scores.story}/10`;
+
+            let suggestion = "";
+            if (total < 50) suggestion = "Gợi ý: Bài viết hơi ngắn. Hãy mở rộng phần động lực cá nhân và mục tiêu nghề nghiệp.";
+            else if (total < 80) suggestion = "Gợi ý: Khá tốt! Bạn nên thêm các ví dụ cụ thể về thành tích để tăng tính thuyết phục.";
+            else suggestion = "Gợi ý: Tuyệt vời! Hãy rà soát lỗi chính tả và ngữ pháp cuối cùng.";
+            
+            document.getElementById('ai-suggestion').innerText = suggestion;
+            
+            // Tự động check checklist
+            document.getElementById('check-intro').checked = length > 100;
+            document.getElementById('check-goals').checked = foundKeywords > 3;
+            document.getElementById('check-fit').checked = text.toLowerCase().includes("trường") || text.toLowerCase().includes("university");
+
+            return total;
+        }
+
+        function processAI(input) {
+            let response = "";
+
+            // Nếu người dùng dán một đoạn văn dài (giả định là bài luận)
+            if (input.length > 300) {
+                const score = analyzeSOP(input);
+                response = `Tôi đã nhận được bản thảo của bạn. Điểm đánh giá sơ bộ là **${Math.round(score)}/100**. \n\nTôi đã cập nhật phân tích chi tiết ở cột bên phải. Bạn muốn tôi sửa chi tiết phần nào đầu tiên?`;
+            } else if (input.toLowerCase().includes("hướng dẫn")) {
+                response = "Dưới đây là cấu trúc SOP chuẩn: \n1. **Mở bài**: Câu chuyện dẫn dắt ấn tượng. \n2. **Học thuật**: Quá trình học tập của bạn. \n3. **Kinh nghiệm**: Những gì bạn đã làm. \n4. **Động lực**: Tại sao chọn ngành/trường này? \n5. **Mục tiêu**: Tầm nhìn 5-10 năm tới. \n\nBạn muốn viết nháp phần nào trước?";
+                state.step = 4;
+            } else if (state.step < questions.length - 1) {
+                state.step++;
+                response = questions[state.step];
+            } else {
+                response = "Tôi hiểu rồi. Bạn có muốn tôi giúp tối ưu hóa đoạn văn nào cụ thể không, hay bạn cần thêm ví dụ về phần 'Động lực chọn trường'?";
+            }
+
+            addMessage('ai', response);
+            updateUI();
+        }
+
+        function updateUI() {
+            // Update Progress Bars
+            const p1 = Math.min(100, (state.step / 1) * 100);
+            const p2 = state.step >= 2 ? 100 : (state.step > 1 ? 50 : 0);
+            const p3 = state.step >= 4 ? 60 : 0;
+
+            document.getElementById('p1').style.width = `${p1}%`;
+            document.getElementById('p2').style.width = `${p2}%`;
+            document.getElementById('p3').style.width = `${p3}%`;
+        }
+
+        function saveState() {
+            localStorage.setItem('sop_mentor_state', JSON.stringify(state));
+        }
+
+        function renderHistory() {
+            chatWindow.innerHTML = '';
+            state.history.forEach(m => {
+                const msgDiv = document.createElement('div');
+                msgDiv.className = `msg ${m.sender}`;
+                msgDiv.innerHTML = m.text.replace(/\n/g, '<br>');
+                chatWindow.appendChild(msgDiv);
+            });
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+        }
+
+        function resetSession() {
+            if(confirm("Bạn có chắc muốn xóa lịch sử chat và bắt đầu lại?")) {
+                localStorage.removeItem('sop_mentor_state');
+                location.reload();
+            }
+        }
+
+        function triggerUpload() {
+            document.getElementById('file-input').click();
+        }
+
+        document.getElementById('file-input').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                addMessage('user', `[Đã tải lên tệp: ${file.name}]`);
+                setTimeout(() => {
+                    addMessage('ai', "Tôi đã nhận được file. Tuy nhiên vì đây là bản Demo, bạn hãy copy nội dung tệp và dán trực tiếp vào khung chat để tôi phân tích nhé! ✍️");
+                }, 800);
+            }
+        });
+
+        // Tự động giãn nở textarea
+        userInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+        });
+
+        // Enter để gửi
+        userInput.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleSendMessage();
+            }
+        });
+    </script>
+</body>
+</html>
